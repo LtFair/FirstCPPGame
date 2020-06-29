@@ -3,6 +3,7 @@
 
 #include "FPSCharacter.h"
 #include "Engine/World.h"
+#include <FirstCPPGame\DamageableActor.h>
 
 // Sets default values
 AFPSCharacter::AFPSCharacter()
@@ -33,7 +34,20 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 }
 
-
+void AFPSCharacter::fireWeapon()
+{
+	// Grab the object being hit, if the raycast hit something it will have a actor inside of it
+	FHitResult hit = instantShot();
+	// Below is a pointer, it points to a memory address of the object. We want to check if the actor hit is a damageable actor, we can do this because damageable actors are a subset of actors
+	ADamageableActor* hitActor = Cast<ADamageableActor>(hit.Actor);
+	if (hitActor && hitActor->isAttackable)
+	{
+		// We just check if the cast was successful or not, if it was execute code
+		// Note that I use hitActor.takeAttack(); which changed to the arrow since its using a pointer
+		// You would use the . when you derefferenced your pointer
+		hitActor->takeAttack();
+	}
+}
 
 FHitResult AFPSCharacter::instantShot()
 {
@@ -55,11 +69,11 @@ FHitResult AFPSCharacter::instantShot()
 	}
 
 	// Tell it to ignore the shooter so you don't shoot yourself by accident
-	FCollisionQueryParams traceParams(SCENE_QUERY_STAT(instantShot), true, Instigator);
+	FCollisionQueryParams traceParams(SCENE_QUERY_STAT(instantShot), true, GetInstigator());
 	// Default to 0 unless something actually hits
 	FHitResult hit(ForceInit);
 	// Does the actual shot using LineTrace
-	GetWorld()->LineTraceSingleByChannel(hit, rayLocation, endTrace, EEC_Visibility, traceParams)
+	GetWorld()->LineTraceSingleByChannel(hit, rayLocation, endTrace, ECC_Visibility, traceParams);
 
 	return hit;
 }
